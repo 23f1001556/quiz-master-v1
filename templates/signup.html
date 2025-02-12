@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Sign Up
+{% endblock %}
+
+{% block content %} 
+<h1>Sign Up</h1>
+<div id="panel1">
+    <form action="{{url_for('signup_post')}}" method="post" class="mt-5">
+        
+        <label for="username" class="form-label">
+             Username:
+             <input type="text" name="username" id="username" class="form-control" required  placeholder="Enter your Email"/>
+        </label>
+        <label for="password" class="form-label">
+            Password:
+            <input type="password" name="password" id="password" class="form-control" required placeholder="Enter your password" />
+        </label>
+        <label for="fullname" class="form-label">
+            Full Name:
+            <input type="text" name="fullname" id="fullname" class="form-control"placeholder="Enter full name" />
+        </label>
+        <label for="dob" class="form-label">
+            Date of Birth:
+            <input type="date" name="dob" id="dob" class="form-control" />
+        </label>
+        <br>
+        <input type="submit" value="Sign Up" class="btn btn-success mt-3" />
+        <br>
+        <h5>Already have an account?</h5>
+        <a href="{{url_for('login')}}">Login</a>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block style %}
+<style>
+    body {
+        background-size: cover;
+        background-color: gainsboro;
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px;
+        border: 3px solid #ccc;
+        border-radius: 8px; /* Optional: add rounded corners to the form */
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: add shadow for better visibility */
+    }
+
+    #panel1 {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+    }
+
+    h1 {
+        margin-top: 64px;
+        text-align: center;
+    }
+
+    .form-label {
+        margin: 8px 0;
+    }
+    
+    .btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+    }
+
+    a {
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
