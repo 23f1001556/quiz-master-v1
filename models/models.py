@@ -11,13 +11,28 @@ db = SQLAlchemy(app)
 # Model for User
 class User(db.Model):
     __tablename__ = "users"
+    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(50), nullable=False)
+    _password = db.Column("password", db.String(255), nullable=False)  # Store the hashed password here
     fullname = db.Column(db.String(80), nullable=False)
     qualification = db.Column(db.String(100))
     dob = db.Column(db.Date)
     isadmin = db.Column(db.Boolean, nullable=False, default=True)
+
+    # Relationship with Scores
+    scores = db.relationship('Scores', back_populates='user', cascade="all, delete-orphan")
+
+    @property
+    def password(self):
+        raise AttributeError('Password is not a readable attribute')
+    
+    @password.setter
+    def password(self, password):
+        self._password = generate_password_hash(password)  # Hash the password and store it in _password
+
+    def check_password(self, password):
+        return check_password_hash(self._password, password)  # Use _password for verification
 
 class Subject(db.Model):
     __tablename__ = "subject"
@@ -64,6 +79,10 @@ class Scores(db.Model):
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
     total_score = db.Column(db.Integer, nullable=False)
 
+    # Define the back_populates for the relationship
+    user = db.relationship('User', back_populates='scores')
+
+
 # Creating tables and adding default admin user
 with app.app_context():
     db.create_all()
@@ -71,10 +90,11 @@ with app.app_context():
     # Create admin user if not exists
     existing_admin = User.query.filter_by(email='admin').first()
     if not existing_admin:
+        hashed_password = generate_password_hash('admin')  # Hash the password before saving
         admin = User(
             email='admin',
-            password=generate_password_hash('admin'),
-            fullname="Admin User",
+            password=hashed_password,  # Save the hashed password
+            fullname="Admin",
             isadmin=True
         )
         db.session.add(admin)
