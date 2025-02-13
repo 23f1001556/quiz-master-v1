@@ -87,15 +87,8 @@ class Scores(db.Model):
 with app.app_context():
     db.create_all()
 
-    # Create admin user if not exists
-    existing_admin = User.query.filter_by(email='admin').first()
-    if not existing_admin:
-        hashed_password = generate_password_hash('admin')  # Hash the password before saving
-        admin = User(
-            email='admin',
-            password=hashed_password,  # Save the hashed password
-            fullname="Admin",
-            isadmin=True
-        )
+    admin=User.query.filter_by(email='admin').first()
+    if not admin:
+        admin=User(email='admin',password='admin',fullname='Admin',isadmin=True)
         db.session.add(admin)
         db.session.commit()
