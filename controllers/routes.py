@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import wraps
 import os
 
-
+#function to check loggin
 def authcheck(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,6 +14,19 @@ def authcheck(func):
             return redirect(url_for('login'))
         return func(*args, **kwargs)
     return wrapper
+#function to check admin login
+def admin_required(func):
+    @wraps(func)
+    def inner(*args,**kwargs):
+        if 'user_id' not in session:
+            flash('you need to login first')
+            return redirect(url_for(login))
+        user=User.query.get(session['user_id'])
+        if not user.isadmin:
+            flash ('You are not authorized to view this page')
+            return redirect(url_for('home'))
+        return func(*args,**kwargs)
+    return inner 
 
 
 #login route and login post route
@@ -62,16 +75,16 @@ def signup_post():
     db.session.commit()
     flash('User registered successfully')
     return redirect(url_for('login'))
-
+#dashboard page for user and admin check role and redirect to user or admin
 @app.route('/home')
 @authcheck
 def home():
     user=User.query.get(session['user_id'])
     if user.isadmin:
-        return render_template("admin.html")
+        return redirect(url_for('admin'))
     else:
-        return render_template('home.html')
-
+        return redirect(url_for('people'))
+#route for admin
 @app.route('/admin')
 @authcheck
 def admin():
@@ -79,22 +92,23 @@ def admin():
     if not User.isadmin:
         flash('You are not authorized to view this page')
     return render_template("admin.html", User=user)
-
+#route for user
 @app.route('/people')
 @authcheck
 def people():
     user = User.query.get(session['user_id'])
-    if not user.isadmin:
-        flash('You are not authorized to view this page')
-    return render_template("people.html", User=user)
+    if user.isadmin:
+        flash("Not authorized to vie this page")
+        return redirect(url_for('home'))
+    return render_template("home.html", User=user)
 
-
-#navbar routes
+#navbar routes singout
 @app.route('/signout')
 def signout():
     session.pop('user_id',None)
     return redirect(url_for('login'))
 
+#edit profile route
 @app.route('/profile')
 @authcheck
 def profile():
@@ -133,38 +147,21 @@ def profile_post():
 #search mistake
 @app.route('/search', methods=['GET'])
 def search():
-    # Ensure that the user is logged in and the session has a 'user_id'
-    if 'user_id' not in session:
-        return redirect(url_for('login'))  # Redirect to login if no session
-    
-    # Get the current logged-in user
-    current_user = User.query.get(session['user_id'])
-    
-    # Check if the logged-in user is an admin
-    if current_user and current_user.isadmin:
-        query = request.args.get('query')
-        users = User.query.filter(User.user_name.ilike(f'%{query}%')).all()
-        subjects = Subject.query.filter(Subject.name.ilike(f'%{query}%')).all()
-        quizzes = Quiz.query.filter(Quiz.name.ilike(f'%{query}%')).all()
-        
-        # Return the results for admin users
-        return render_template('search_results.html', users=users, query=query, user=current_user, subjects=subjects, quizzes=quizzes)
-    
-    # If the user is not an admin
-    if current_user and not current_user.isadmin:
-        query = request.args.get('query')
-        subjects = Subject.query.filter(Subject.name.ilike(f'%{query}%')).all()
-        quizzes = Quiz.query.filter(Quiz.name.ilike(f'%{query}%')).all()
-        
-        # Return the results for non-admin users (no users list)
-        return render_template('search_results.html', query=query, user=current_user, subjects=subjects, quizzes=quizzes)
-    
-    # If somehow the user is not valid, return an error message (This shouldn't happen if session is properly set)
-    return "User not found", 404
+    return render_template('search_results.html')
 #search mistake ends
-#admin dashboaard routes
-@app.route('/subjects', methods=['GET', 'POST'])
-def subjects():
+
+#report route 
+@app.route('/report',methods=['GET'])
+@authcheck
+@admin_required
+def report():
+    return render_template('report.html')
+
+#admin dashboaard routes-subjects
+@app.route('/admin_subjects', methods=['GET', 'POST'])
+@authcheck
+@admin_required
+def admin_subjects():
     if request.method == 'POST':
         # Handle the form submission to add a new subject
         name = request.form.get('subject_name')
@@ -186,9 +183,40 @@ def subjects():
     subjects = Subject.query.all()
 
     # Render the template with the list of subjects
-    return render_template('subjects.html', subjects=subjects)
+    return render_template('admin_subjects.html', subjects=subjects)
 
 
+@app.route('/admin_subjects/<int:id>/edit')
+@authcheck
+@admin_required
+def edit_subject(id):
+    return render_template('subject/edit.html')
+@app.route('/admin_subjects/<int:id>/delete')
+@authcheck
+@admin_required
+def delete_subject(id):
+    return render_template('subject/delete.html')
+
+# @app.route('/admin_subjects/<int:id>/delete',methods=['POST'])
+# @authcheck
+# @admin_required
+# def delete_subject(id):
+#     subject=Subject.query.get(id)
+#     if not subject:
+#         flash('subject doesnot exists')
+#         return redirect(url_for(admin_subjects))
+#     db.session.delete(subject)
+#     db.session.commit()
+#     flash("subject deleted successfully")
+#     return redirect(url_for(admin))
+
+#admin dashboaard routes-chapters
+@app.route('/chapter',methods=['GET','POST'])
+@authcheck
+@admin_required
+def admin_chapters():
+
+    return render_template('admin_chapters.html')
 
 # @app.route('/add_chapter', methods=['GET', 'POST'])
 # def add_chapter():
@@ -218,22 +246,43 @@ def subjects():
 #     return render_template('view_chapters.html', chapters=chapters)
 
 
+# @app.route('/admin_chapters/<int:id>/edit')
+# @authcheck
+# @admin_required
+# def edit_subject(id):
+#     return render_template('chapter/delete.html')
+
+# @app.route('/admin_chapters/<int:id>/delete')
+# @authcheck
+# @admin_required
+# def delete_subject(id):
+#     return render_template('chapter/delete.html')
+
+#admin dashboaard routes-quiz
+@app.route('/quiz',methods=['GET','POST'])
+@authcheck
+@admin_required
+def admin_quiz():
+    return render_template('admin_quiz.html')
+
+#admin dashboaard routes-manage_users
 @app.route('/manage_users', methods=['GET'])
+@authcheck
+@admin_required
 def manage_users_get():
     users = User.query.all()  # Get all users from the database
     return render_template('manage_users.html', users=users)  # Pass the users list to the template
 
 
+#user subejct routes
+@app.route('/user_subjects', methods=['GET'])
+@authcheck
+def subjects():
+    subjects = Subject.query.all()  # Fetch all subjects from the database
+    return render_template('subjects.html', subjects=subjects)
 
-@app.route('/report')
-def report():
-    return render_template('report.html')
-
+#user quiz routes
 @app.route('/quiz',methods=['POST'])
+@authcheck
 def quiz():
     return render_template('quiz.html')
-
-@app.route('/quiz',methods=['POST'])
-def quiz_post():
-
-    return redirect(url_for('profile'))
