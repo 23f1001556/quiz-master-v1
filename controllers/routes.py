@@ -78,7 +78,7 @@ def admin():
     user = User.query.get(session['user_id'])
     if not User.isadmin:
         flash('You are not authorized to view this page')
-    return render_template("admin.html", User=user,subjects_post=Subject.query.all())
+    return render_template("admin.html", User=user)
 
 @app.route('/people')
 @authcheck
@@ -163,34 +163,31 @@ def search():
     return "User not found", 404
 #search mistake ends
 #admin dashboaard routes
-
-
 @app.route('/subjects', methods=['GET', 'POST'])
-def subjects_post():
-    # Fetch all subjects from the database
-    subjects = Subject.query.all()
-
+def subjects():
     if request.method == 'POST':
-        # Handle adding new subject (the code you already have)
+        # Handle the form submission to add a new subject
         name = request.form.get('subject_name')
-        description = request.form.get('description')
-
+        
         # Check if the subject already exists
         existing_subject = Subject.query.filter_by(name=name).first()
         if existing_subject:
             flash('This subject already exists! Please try adding a different one.', 'error')
-            return redirect(url_for('subjects_post'))
-
-        # Create a new subject instance and add it to the database
-        new_subject = Subject(name=name, description=description)
+            return redirect(url_for('subjects'))  # Redirect back to the subjects page
+        
+        # If not, create a new subject and add it to the database
+        new_subject = Subject(name=name)
         db.session.add(new_subject)
         db.session.commit()
 
         flash('Subject added successfully!', 'success')
-        return redirect(url_for('subjects_post'))  # Redirect to display subjects
 
-    # Pass subjects to the template to display
+    # Fetch all subjects after adding the new one (if any)
+    subjects = Subject.query.all()
+
+    # Render the template with the list of subjects
     return render_template('subjects.html', subjects=subjects)
+
 
 
 # @app.route('/add_chapter', methods=['GET', 'POST'])
@@ -221,9 +218,12 @@ def subjects_post():
 #     return render_template('view_chapters.html', chapters=chapters)
 
 
-@app.route('/manage_users')
-def manage_users():
-    flash("manage_users")
+@app.route('/manage_users', methods=['GET'])
+def manage_users_get():
+    users = User.query.all()  # Get all users from the database
+    return render_template('manage_users.html', users=users)  # Pass the users list to the template
+
+
 
 @app.route('/report')
 def report():
