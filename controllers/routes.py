@@ -44,7 +44,7 @@ def login_post():
     user = User.query.filter_by(user_name=user_name).first()
     if not user:
         flash('User does not exist, please register')
-        return redirect(url_for('login'))
+        return redirect(url_for('signup'))
     if not user.check_password(password):
         flash('Password is incorrect')
         return redirect(url_for('login'))
@@ -100,7 +100,7 @@ def people():
     if user.isadmin:
         flash("Not authorized to vie this page")
         return redirect(url_for('home'))
-    return render_template("home.html", User=user)
+    return render_template("home.html", user=user)
 
 #navbar routes singout
 @app.route('/signout')
@@ -147,8 +147,38 @@ def profile_post():
 #search mistake
 @app.route('/search', methods=['GET'])
 def search():
-    return render_template('search_results.html')
-#search mistake ends
+    query = request.args.get('search-query', '')  # Ensure it's a string
+    users = []
+    subjects = []
+    chapters = []
+    quiz = []
+
+    if query:
+        # Search users
+        users = User.query.filter(
+            (User.user_name.ilike(f'%{query}%')) | 
+            (User.fullname.ilike(f'%{query}%'))
+        ).all()
+
+        # Search subjects
+        subjects = Subject.query.filter(
+            (Subject.name.ilike(f'%{query}%'))
+        ).all()
+
+        # Search chapters
+        chapters = Chapter.query.filter(
+            (Chapter.name.ilike(f'%{query}%'))  # Assuming 'name' is the field you're searching on
+        ).all()
+
+        # Search quiz
+        quiz = Quiz.query.filter(
+            (Quiz.name.ilike(f'%{query}%'))
+        ).all()
+
+    return render_template('search_results.html', query=query, users=users, subjects=subjects, chapters=chapters, quiz=quiz)
+
+
+
 
 #report route 
 @app.route('/report',methods=['GET'])
@@ -185,94 +215,170 @@ def admin_subjects():
     # Render the template with the list of subjects
     return render_template('admin_subjects.html', subjects=subjects)
 
-
-@app.route('/admin_subjects/<int:id>/edit')
+#edit subjects 
+@app.route('/admin_subjects/<int:id>/edit', methods=['GET', 'POST'])
 @authcheck
 @admin_required
 def edit_subject(id):
-    return render_template('subject/edit.html')
+    subject = Subject.query.get(id)  # Use id to get the subject
+    if not subject:
+        flash('Subject does not exist.')
+        return redirect(url_for('admin_subjects'))
+
+    # Handle POST request to update subject
+    if request.method == 'POST':
+        new_name = request.form['subject_name']  # Get the new name from the form
+        if new_name:
+            subject.name = new_name  # Update the subject's name
+            db.session.commit()
+            flash('Subject updated successfully.')
+            return redirect(url_for('admin_subjects'))  # Redirect after update
+
+    return render_template('subject/edit.html', subject=subject)
+
+#deleting subjects 
 @app.route('/admin_subjects/<int:id>/delete')
 @authcheck
 @admin_required
 def delete_subject(id):
+    subject=Subject.query.get(id)
+    if not subject:
+        flash ("subject doesnot exists")
+        return redirect(url_for('admin_subjects'))
+    if subject:
+        db.session.delete(subject)
+        db.session.commit()
+        flash(" subject deleted successfully")
+        return redirect(url_for('admin_subjects'))
     return render_template('subject/delete.html')
 
-# @app.route('/admin_subjects/<int:id>/delete',methods=['POST'])
-# @authcheck
-# @admin_required
-# def delete_subject(id):
-#     subject=Subject.query.get(id)
-#     if not subject:
-#         flash('subject doesnot exists')
-#         return redirect(url_for(admin_subjects))
-#     db.session.delete(subject)
-#     db.session.commit()
-#     flash("subject deleted successfully")
-#     return redirect(url_for(admin))
+
+
+
+
 
 #admin dashboaard routes-chapters
-@app.route('/chapter',methods=['GET','POST'])
+@app.route('/chapter', methods=['GET', 'POST'])
 @authcheck
 @admin_required
 def admin_chapters():
+    if request.method == 'GET':
+        subjects = Subject.query.all()  # Get all subjects
+        chapters = Chapter.query.all()  # Get all chapters
+        return render_template('admin_chapters.html', subjects=subjects, chapters=chapters)
 
-    return render_template('admin_chapters.html')
+    if request.method == 'POST':
+        subject_id = request.form.get('subject')
+        chapter_name = request.form.get('chapter_name')
 
-# @app.route('/add_chapter', methods=['GET', 'POST'])
-# def add_chapter():
-#     if request.method == 'POST':
-#         # Get data from the form
-#         chapter_name = request.form.get('chapter_name')
-#         description = request.form.get('description')
-#         subject_id = request.form.get('subject_id')
-
-#         # Create a new Chapter instance
-#         new_chapter = Chapter(name=chapter_name, description=description, subject_id=subject_id)
+        # Validate and add new chapter
+        if subject_id and chapter_name:
+            new_chapter = Chapter(name=chapter_name, subject_id=subject_id)
+            db.session.add(new_chapter)
+            db.session.commit()
+            flash('Chapter added successfully!')
         
-#         # Add the new chapter to the session and commit to the database
-#         db.session.add(new_chapter)
-#         db.session.commit()
-
-#         flash('Chapter added successfully!', 'success')
-#         return redirect(url_for('subjects'))  # Redirect to the page showing all chapters (or anywhere else)
-
-#     # If GET request, render the form to add a chapter
-#     subjects = Subject.query.all()  # Get all subjects for the dropdown
-#     return render_template('add_chapter.html', subjects=subjects)
-
-# @app.route('/view_chapters')
-# def view_chapters():
-#     chapters = Chapter.query.all()  # Fetch all chapters
-#     return render_template('view_chapters.html', chapters=chapters)
+        return redirect(url_for('admin_chapters'))
 
 
-# @app.route('/admin_chapters/<int:id>/edit')
-# @authcheck
-# @admin_required
-# def edit_subject(id):
-#     return render_template('chapter/delete.html')
 
-# @app.route('/admin_chapters/<int:id>/delete')
-# @authcheck
-# @admin_required
-# def delete_subject(id):
-#     return render_template('chapter/delete.html')
+
+#edit chapter
+
+
+#edit quiz
+
+
 
 #admin dashboaard routes-quiz
-@app.route('/quiz',methods=['GET','POST'])
+
+
+@app.route('/quiz', methods=['GET', 'POST'])
 @authcheck
 @admin_required
 def admin_quiz():
-    return render_template('admin_quiz.html')
+    if request.method == 'POST':
+        # Capture form data
+        subject_id = request.form.get('subject')
+        chapter_id = request.form.get('chapter')
+        quiz_name = request.form.get('quiz_name')
+
+        # Create a new quiz object
+        new_quiz = Quiz(name=quiz_name, chapter_id=chapter_id)
+
+        # Add the quiz to the session and commit to the database
+        db.session.add(new_quiz)
+        db.session.commit()
+
+        # Flash success message
+        flash('Quiz added successfully!', 'success')
+
+        # Redirect to the quiz management page (to avoid form resubmission)
+        return redirect(url_for('admin_quiz'))
+
+    # GET request: Retrieve subjects and chapters to display in the form
+    subjects = Subject.query.all()
+    return render_template('admin_quiz.html', subjects=subjects)
+
+
+
+@app.route('/quiz_form')
+def quiz_form():
+    return render_template('quiz_form.html')
+
+
 
 #admin dashboaard routes-manage_users
 @app.route('/manage_users', methods=['GET'])
 @authcheck
 @admin_required
-def manage_users_get():
+def manage_users():
     users = User.query.all()  # Get all users from the database
     return render_template('manage_users.html', users=users)  # Pass the users list to the template
 
+#deleting users
+
+@app.route('/manage_users_delete/<int:id>', methods=['POST'])
+def manage_users_delete(id):
+    user = User.query.get(id)  # Fetch the user from the database
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('manage_users'))
+
+    # Check if the user is an admin
+    if user.user_name == "admin":  # Assuming "admin" is a user_name identifier
+        flash('Master user cannot be deleted.')
+        return redirect(url_for('manage_users'))
+    
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully.')
+
+    # Redirect to the user management page
+    return redirect(url_for('manage_users'))
+
+
+
+#admin manage_score ->score button
+
+@app.route('/check_score')
+def check_score():
+    # Fetch the user score details based on the user_id from the session or query string
+    user_id = request.args.get('user_id')  # Assuming user_id is passed as a query parameter
+    if user_id:
+        scores = Scores.query.filter_by(user_id=user_id).all()
+    else:
+        scores = None
+    
+    return render_template('manage_users/score.html', scores=scores)
+
+
+@app.route('/dashboard')
+@authcheck
+@admin_required
+def dashboard():
+    return render_template('dashboard.html')
 
 #user subejct routes
 @app.route('/user_subjects', methods=['GET'])
@@ -282,7 +388,47 @@ def subjects():
     return render_template('subjects.html', subjects=subjects)
 
 #user quiz routes
-@app.route('/quiz',methods=['POST'])
+@app.route('/quiz/<int:quiz_id>/add_question', methods=['GET', 'POST'])
+
+def add_question(quiz_id):
+    quiz = Quiz.query.get(quiz_id)
+    if not quiz:
+        return "Quiz not found", 404
+
+    if request.method == 'POST':
+        question_statement = request.form.get('question_statement')
+        option_1 = request.form.get('option_1')
+        option_2 = request.form.get('option_2')
+        option_3 = request.form.get('option_3')
+        option_4 = request.form.get('option_4')
+        correct_option = request.form.get('correct_option')
+
+        # Create new Question object
+        new_question = Question(
+            quiz_id=quiz.id,
+            chapter_id=quiz.chapter_id,
+            question_statement=question_statement,
+            option_1=option_1,
+            option_2=option_2,
+            option_3=option_3,
+            option_4=option_4,
+            correct_option=int(correct_option)  # Ensure correct_option is an integer (1-4)
+        )
+
+        # Add the question to the database
+        db.session.add(new_question)
+        db.session.commit()
+
+        # Redirect to the quiz page after adding the question
+        return redirect(url_for('admin_quiz', quiz_id=quiz.id))
+
+    return render_template('quiz_form.html', quiz=quiz)
+
+
+#user report route
+@app.route('/user_report')
 @authcheck
-def quiz():
-    return render_template('quiz.html')
+def user_report():
+    return render_template('user_report.html')
+
+
