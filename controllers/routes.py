@@ -1,9 +1,14 @@
-from flask import Flask,render_template,redirect,request,url_for,flash,session
-from app import app
-from models.models import db,User,Subject,Chapter,Quiz,Question,Scores
+from flask import Flask, render_template, redirect, request, url_for, flash, session, current_app
+from app import app  
+from models.models import db, User, Subject, Chapter, Quiz, Question, Scores 
 from datetime import datetime
 from functools import wraps
 import os
+import matplotlib
+matplotlib.use('Agg')  # Use Agg backend to prevent GUI-related issues
+import matplotlib.pyplot as plt  
+from io import BytesIO  
+from PIL import Image  
 
 #function to check loggin
 def authcheck(func):
@@ -100,7 +105,7 @@ def people():
     if user.isadmin:
         flash("Not authorized to vie this page")
         return redirect(url_for('home'))
-    return render_template("home.html", user=user)
+    return render_template("userhome.html", user=user)
 
 #navbar routes singout
 @app.route('/signout')
@@ -252,10 +257,9 @@ def delete_subject(id):
         return redirect(url_for('admin_subjects'))
     return render_template('subject/delete.html')
 
-
-
-
-
+@app.route('/editquizx')
+def editquizx():
+    return render_template ('quiz/edit.html')
 
 #admin dashboaard routes-chapters
 @app.route('/chapter', methods=['GET', 'POST'])
@@ -281,14 +285,91 @@ def admin_chapters():
         return redirect(url_for('admin_chapters'))
 
 
-
-
 #edit chapter
+@app.route('/admin_chapters/<int:id>/edit', methods=['GET', 'POST'])
+@authcheck
+@admin_required
+def edit_chapter(id):
+    chapter = Chapter.query.get(id)
+    if not chapter:
+        flash('Chapter does not exist.')
+        return redirect(url_for('admin_chapters'))
+    if request.method == 'POST':
+        new_name = request.form.get('chapter_name')
+        if new_name:
+            chapter.name = new_name
+            db.session.commit()
+            flash('Chapter updated successfully')
+            return redirect(url_for('admin_chapters'))
+    return render_template('chapter/edit.html', chapter=chapter)
 
+
+#delete chapter
+@app.route('/admin_chapters/<int:id>/delete',methods=['POST'])
+@authcheck
+@admin_required
+def delete_chapter(id):
+    chapter=Chapter.query.get(id)
+    if not chapter:
+        flash("chapter doesnot exists")
+        return redirect(url_for('admin_chapters'))
+    if chapter:
+        db.session.delete(chapter)
+        db.session.commit()
+        flash("chapter deleted successfully")
+        return redirect(url_for('admin_chapters'))
+    return render_template('chapter/delete.html')
 
 #edit quiz
+@app.route('/admin_quiz/<int:id>/edit', methods=['GET', 'POST'])
+@authcheck
+@admin_required
+def edit_quiz(id):
+    quiz = Quiz.query.get(id)
+    if not quiz:
+        flash('Quiz does not exist.')
+        return redirect(url_for('admin_quiz'))
+
+    if request.method == 'POST':
+        # Update quiz name
+        quiz_name = request.form.get('quiz_name')
+        if quiz_name:
+            quiz.name = quiz_name
+
+        # Update questions and options
+        for question_id in request.form.getlist('question_id'):
+            question = Question.query.get(question_id)
+            if question:
+                question.question_statement = request.form.get(f'question_statement_{question_id}')
+                question.option_1 = request.form.get(f'option_1_{question_id}')
+                question.option_2 = request.form.get(f'option_2_{question_id}')
+                question.option_3 = request.form.get(f'option_3_{question_id}')
+                question.option_4 = request.form.get(f'option_4_{question_id}')
+                question.correct_option = int(request.form.get(f'correct_option_{question_id}'))
+                db.session.commit()
+
+        db.session.commit()
+        flash('Quiz updated successfully')
+        return redirect(url_for('admin_quiz'))
+
+    return render_template('quiz/edit.html', quiz=quiz)
 
 
+#delete quiz
+@app.route('/admin_quiz/<int:id>/delete',methods=['POST'])
+@authcheck
+@admin_required
+def delete_quiz(id):
+    quiz=Quiz.query.get(id)
+    if not quiz:
+        flash("quiz doesnot exists")
+        return redirect(url_for('admin_quiz'))
+    if quiz:
+        db.session.delete(quiz)
+        db.session.commit()
+        flash("quiz deleted successfully")
+        return redirect(url_for('admin_quiz'))
+    return render_template('quiz/delete.html')
 
 #admin dashboaard routes-quiz
 
@@ -325,8 +406,6 @@ def admin_quiz():
 @app.route('/quiz_form')
 def quiz_form():
     return render_template('quiz_form.html')
-
-
 
 #admin dashboaard routes-manage_users
 @app.route('/manage_users', methods=['GET'])
@@ -374,18 +453,71 @@ def check_score():
     return render_template('manage_users/score.html', scores=scores)
 
 
+
+
 @app.route('/dashboard')
 @authcheck
 @admin_required
 def dashboard():
-    return render_template('dashboard.html')
+    # Fetching user data (e.g., quiz attempts, scores)
+    user_count = User.query.count()
+    users = User.query.all()
 
+    # Prepare the data for quiz attempts and scores
+    quiz_attempts = {}
+    scores = {}
+
+    for user in users:
+        quiz_attempts[user.id] = Scores.query.filter_by(user_id=user.id).count()
+        total_score = db.session.query(db.func.sum(Scores.total_score)).filter_by(user_id=user.id).scalar() or 0
+        scores[user.id] = total_score
+
+    # Generate chart (e.g., bar chart showing quiz attempts vs total score)
+    fig, ax = plt.subplots()
+
+    # Prepare the data for the chart
+    user_names = [user.user_name for user in users]  # Assuming 'user_name' is the correct attribute
+    attempt_counts = [quiz_attempts[user.id] for user in users]
+    score_totals = [scores[user.id] for user in users]
+
+    # Create the bar chart
+    ax.bar(user_names, attempt_counts, label='Quiz Attempts', alpha=0.5)
+    ax.bar(user_names, score_totals, label='Total Score', alpha=0.5)
+    ax.set_ylabel('Count')
+    ax.set_title('Quiz Attempts vs Total Score')
+    ax.legend()
+
+    # Set up the file path to save the chart image
+    img_path = os.path.join(current_app.static_folder, 'admin_dashboard_chart.png')
+
+    # Save the chart image
+    fig.savefig(img_path)
+
+    # Close the plot to avoid memory issues
+    plt.close(fig)
+
+    # Prepare the data dictionary to pass to the template
+    data = {
+        'user_count': user_count,
+        'quiz_attempts': quiz_attempts,
+        'scores': scores
+    }
+
+    # Render the dashboard page and pass the data and users
+    return render_template('dashboard.html', data=data, users=users)
 #user subejct routes
 @app.route('/user_subjects', methods=['GET'])
 @authcheck
 def subjects():
     subjects = Subject.query.all()  # Fetch all subjects from the database
     return render_template('subjects.html', subjects=subjects)
+
+
+@app.route('/attempted_quiz',methods=['GET'])
+@authcheck
+def attempted_quiz():
+    return render_template('attempted_quiz.html')
+
 
 #user quiz routes
 @app.route('/quiz/<int:quiz_id>/add_question', methods=['GET', 'POST'])
@@ -426,9 +558,77 @@ def add_question(quiz_id):
 
 
 #user report route
-@app.route('/user_report')
-@authcheck
+@app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
+def submit_quiz(quiz_id):
+    quiz = Quiz.query.get_or_404(quiz_id)
+    questions = Question.query.filter_by(quiz_id=quiz_id).all()
+
+    if request.method == 'POST':
+        score = 0
+        total_questions = len(questions)
+
+        # Loop through each question
+        for question in questions:
+            # Get the user's selected answer for this question (this will be a string, e.g., '1', '2', '3', or '4')
+            user_answer = request.form.get(f'question_{question.id}')  
+
+            # Check if the user's answer matches the correct option
+            if user_answer and int(user_answer) == question.correct_option:
+                score += 1
+
+        # Calculate the percentage of correct answers
+        percentage = (score / total_questions) * 100
+
+        # Get the user_id from the session (or you can check current_user if using Flask-Login)
+        user_id = session.get('user_id')  # Make sure the user_id is set in the session
+
+        if not user_id:
+            flash("User not logged in or session expired", "danger")
+            return redirect(url_for('login'))  # Redirect to login if user_id is not found in session
+
+        # Check if a score entry already exists for this user and quiz
+        existing_score = Scores.query.filter_by(user_id=user_id, quiz_id=quiz_id).first()
+
+        # If the score exists, do not update it, else create a new entry
+        if not existing_score:
+            new_score = Scores(
+                user_id=user_id,
+                quiz_id=quiz_id,
+                total_score=score
+            )
+            db.session.add(new_score)
+            db.session.commit()
+
+        # Render the results page after submitting the quiz
+        return render_template('quiz_results.html', score=score, total_questions=total_questions, percentage=percentage)
+
+    return render_template('quiz.html', quiz=quiz, questions=questions)
+
+
+
+@app.route('/user_scores', methods=['GET'])
+@authcheck  # Ensure the user is logged in
+def user_scores():
+    user = User.query.get(1)  # Replace with the actual logged-in user
+    scores = Scores.query.filter_by(user_id=user.id).all()  # Get all scores for this user
+
+    # Fetch the corresponding quizzes and scores
+    result = []
+    for score in scores:
+        quiz = Quiz.query.get(score.quiz_id)  # Get quiz for each score
+        result.append({
+            'quiz_name': quiz.name,
+            'score': score.total_score,
+            'date': quiz.date_of_quiz,
+        })
+
+    return render_template('user_scores.html', scores=result)
+
+
+
+@app.route('/user_report', methods=['GET'])
 def user_report():
+    # Logic for generating the report
     return render_template('user_report.html')
 
 
