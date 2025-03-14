@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import wraps
 import os
 import matplotlib
-matplotlib.use('Agg')  # Use Agg backend to prevent GUI-related issues
+matplotlib.use('Agg')  #Agg backend to prevent GUI-related issues
 import matplotlib.pyplot as plt  
 from io import BytesIO  
 from PIL import Image  
@@ -75,6 +75,9 @@ def signup_post():
     if User.query.filter_by(user_name=user_name).first():
         flash('User already exists')
         return redirect(url_for('login'))
+    if User.query.filter_by(email=email).first():
+        flash('This email already exists try another')
+        return redirect(url_for('signup'))
     user=User(user_name=user_name,password=password,email=email)
     db.session.add(user)
     db.session.commit()
@@ -89,26 +92,31 @@ def home():
         return redirect(url_for('admin'))
     else:
         return redirect(url_for('people'))
+    
 #route for admin
 @app.route('/admin')
+@admin_required
 @authcheck
 def admin():
     user = User.query.get(session['user_id'])
     if not User.isadmin:
         flash('You are not authorized to view this page')
     return render_template("admin.html", User=user)
+
 #route for user
 @app.route('/people')
 @authcheck
 def people():
     user = User.query.get(session['user_id'])
-    if user.isadmin:
+    if user.isadmin: 
         flash("Not authorized to vie this page")
         return redirect(url_for('home'))
     return render_template("userhome.html", user=user)
 
-#navbar routes singout
+
+#navbar routes signout
 @app.route('/signout')
+@authcheck
 def signout():
     session.pop('user_id',None)
     return redirect(url_for('login'))
@@ -149,8 +157,9 @@ def profile_post():
     return redirect(url_for('profile'))
 
 
-#search mistake
+#search 
 @app.route('/search', methods=['GET'])
+@authcheck
 def search():
     query = request.args.get('search-query', '')  # Ensure it's a string
     users = []
@@ -181,8 +190,6 @@ def search():
         ).all()
 
     return render_template('search_results.html', query=query, users=users, subjects=subjects, chapters=chapters, quiz=quiz)
-
-
 
 
 #report route 
@@ -257,9 +264,7 @@ def delete_subject(id):
         return redirect(url_for('admin_subjects'))
     return render_template('subject/delete.html')
 
-@app.route('/editquizx')
-def editquizx():
-    return render_template ('quiz/edit.html')
+
 
 #admin dashboaard routes-chapters
 @app.route('/chapter', methods=['GET', 'POST'])
@@ -321,6 +326,10 @@ def delete_chapter(id):
     return render_template('chapter/delete.html')
 
 #edit quiz
+@app.route('/editquizx')
+def editquizx():
+    return render_template ('quiz/edit.html')
+
 @app.route('/admin_quiz/<int:id>/edit', methods=['GET', 'POST'])
 @authcheck
 @admin_required
@@ -373,7 +382,6 @@ def delete_quiz(id):
 
 #admin dashboaard routes-quiz
 
-
 @app.route('/quiz', methods=['GET', 'POST'])
 @authcheck
 @admin_required
@@ -404,6 +412,7 @@ def admin_quiz():
 
 
 @app.route('/quiz_form')
+@authcheck
 def quiz_form():
     return render_template('quiz_form.html')
 
@@ -416,8 +425,9 @@ def manage_users():
     return render_template('manage_users.html', users=users)  # Pass the users list to the template
 
 #deleting users
-
 @app.route('/manage_users_delete/<int:id>', methods=['POST'])
+@authcheck
+@admin_required
 def manage_users_delete(id):
     user = User.query.get(id)  # Fetch the user from the database
     if not user:
@@ -442,9 +452,15 @@ def manage_users_delete(id):
 #admin manage_score ->score button
 
 @app.route('/check_score')
+@authcheck
+@admin_required
 def check_score():
     # Fetch the user score details based on the user_id from the session or query string
     user_id = request.args.get('user_id')  # Assuming user_id is passed as a query parameter
+    user=User.query.get(user_id)
+    if  user.isadmin:
+        flash('Master user has no score ')
+        return redirect(url_for('manage_users'))
     if user_id:
         scores = Scores.query.filter_by(user_id=user_id).all()
     else:
@@ -513,15 +529,55 @@ def subjects():
     return render_template('subjects.html', subjects=subjects)
 
 
-@app.route('/attempted_quiz',methods=['GET'])
+@app.route('/attempted_quiz', methods=['GET'])
 @authcheck
 def attempted_quiz():
-    return render_template('attempted_quiz.html')
+    # Get the user ID from the session (assuming the user is logged in)
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("You must be logged in to view attempted quizzes.", "danger")
+        return redirect(url_for('login'))  # Redirect to login if user is not logged in
+
+    # Fetch quizzes that the user has attempted (from Scores model)
+    attempted_scores = Scores.query.filter_by(user_id=user_id).all()
+
+    # Prepare a list of quizzes the user attempted, with count of attempts
+    attempted_quizzes = {}
+    for score in attempted_scores:
+        quiz = Quiz.query.get(score.quiz_id)
+        
+        # Ensure quiz exists
+        if quiz:
+            if quiz.id not in attempted_quizzes:
+                attempted_quizzes[quiz.id] = {
+                    'quiz_name': quiz.name,
+                    'total_questions': len(quiz.questions),
+                    'attempt_count': 0  # Initialize attempt count
+                }
+            # Increment the attempt count for each quiz
+            attempted_quizzes[quiz.id]['attempt_count'] += 1
+            # Add the score details as well
+            attempted_quizzes[quiz.id].setdefault('scores', []).append({
+                'score': score.total_score,
+                'date_attempted': score.timestamp.strftime('%Y-%m-%d')
+            })
+
+        else:
+            # If quiz doesn't exist, you can log this or handle it accordingly
+            print(f"Quiz with ID {score.quiz_id} not found.")
+
+    # Prepare the data to pass to the template
+    quizzes = list(attempted_quizzes.values())
+
+    # Render the template with the attempted quizzes
+    return render_template('attempted_quiz.html', attempted_quizzes=quizzes)
 
 
-#user quiz routes
+
+
+#admin quiz add question
 @app.route('/quiz/<int:quiz_id>/add_question', methods=['GET', 'POST'])
-
+@authcheck
 def add_question(quiz_id):
     quiz = Quiz.query.get(quiz_id)
     if not quiz:
@@ -555,10 +611,9 @@ def add_question(quiz_id):
         return redirect(url_for('admin_quiz', quiz_id=quiz.id))
 
     return render_template('quiz_form.html', quiz=quiz)
-
-
-#user report route
+#------------------
 @app.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
+@authcheck
 def submit_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     questions = Question.query.filter_by(quiz_id=quiz_id).all()
@@ -569,8 +624,7 @@ def submit_quiz(quiz_id):
 
         # Loop through each question
         for question in questions:
-            # Get the user's selected answer for this question (this will be a string, e.g., '1', '2', '3', or '4')
-            user_answer = request.form.get(f'question_{question.id}')  
+            user_answer = request.form.get(f'question_{question.id}')  # Get the user's answer
 
             # Check if the user's answer matches the correct option
             if user_answer and int(user_answer) == question.correct_option:
@@ -579,25 +633,22 @@ def submit_quiz(quiz_id):
         # Calculate the percentage of correct answers
         percentage = (score / total_questions) * 100
 
-        # Get the user_id from the session (or you can check current_user if using Flask-Login)
-        user_id = session.get('user_id')  # Make sure the user_id is set in the session
+        # Get the user_id from the session
+        user_id = session.get('user_id')
 
         if not user_id:
             flash("User not logged in or session expired", "danger")
             return redirect(url_for('login'))  # Redirect to login if user_id is not found in session
 
-        # Check if a score entry already exists for this user and quiz
-        existing_score = Scores.query.filter_by(user_id=user_id, quiz_id=quiz_id).first()
+        # **Create a new score entry every time the quiz is submitted**
+        new_score = Scores(
+            user_id=user_id,
+            quiz_id=quiz_id,
+            total_score=percentage
+        )
 
-        # If the score exists, do not update it, else create a new entry
-        if not existing_score:
-            new_score = Scores(
-                user_id=user_id,
-                quiz_id=quiz_id,
-                total_score=score
-            )
-            db.session.add(new_score)
-            db.session.commit()
+        db.session.add(new_score)
+        db.session.commit()
 
         # Render the results page after submitting the quiz
         return render_template('quiz_results.html', score=score, total_questions=total_questions, percentage=percentage)
@@ -606,29 +657,69 @@ def submit_quiz(quiz_id):
 
 
 
-@app.route('/user_scores', methods=['GET'])
-@authcheck  # Ensure the user is logged in
-def user_scores():
-    user = User.query.get(1)  # Replace with the actual logged-in user
-    scores = Scores.query.filter_by(user_id=user.id).all()  # Get all scores for this user
+# @app.route('/user_scores', methods=['GET'])
+# @authcheck  
+# def user_scores():
+#     user_id = session.get('user_id')
+#     if not user_id:
+#         flash("You must be logged in to view your scores.", "danger")
+#         return redirect(url_for('login')) 
+#     user = User.query.get(user_id)
+#     if not user:
+#         flash("User not found.", "danger")
+#         return redirect(url_for('login')) 
 
-    # Fetch the corresponding quizzes and scores
-    result = []
-    for score in scores:
-        quiz = Quiz.query.get(score.quiz_id)  # Get quiz for each score
-        result.append({
-            'quiz_name': quiz.name,
-            'score': score.total_score,
-            'date': quiz.date_of_quiz,
-        })
+#     scores = Scores.query.filter_by(user_id=user.id).all()
 
-    return render_template('user_scores.html', scores=result)
-
-
+#     result = []
+#     for score in scores:
+#         quiz = Quiz.query.get(score.quiz_id) 
+#         if quiz:  
+#             result.append({
+#                 'quiz_name': quiz.name,
+#                 'score': score.total_score,
+#                 'date': quiz.date_of_quiz.strftime('%Y-%m-%d'), 
+#             })
+#         else:
+#             print(f"Quiz with ID {score.quiz_id} not found.")  
+    
+#     return render_template('user_scores.html', scores=result)
 
 @app.route('/user_report', methods=['GET'])
+@authcheck
 def user_report():
-    # Logic for generating the report
     return render_template('user_report.html')
+
+
+@app.route('/user_scores', methods=['GET'])
+@authcheck  
+def user_scores():
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("You must be logged in to view your scores.", "danger")
+        return redirect(url_for('login')) 
+    
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for('login')) 
+
+    # Get all the scores related to this user, ordered by timestamp to show attempts in order
+    scores = Scores.query.filter_by(user_id=user.id).order_by(Scores.timestamp.desc()).all()
+
+    result = []
+    for score in scores:
+        quiz = Quiz.query.get(score.quiz_id)  # Fetch the quiz associated with the score
+        if quiz:  
+            result.append({
+                'quiz_name': quiz.name,
+                'score': score.total_score,
+                'date': score.timestamp.strftime('%Y-%m-%d'),  # Display the date of the attempt
+            })
+        else:
+            print(f"Quiz with ID {score.quiz_id} not found.")  
+    
+    return render_template('user_scores.html', scores=result)
+
 
 
