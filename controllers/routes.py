@@ -552,9 +552,9 @@ def attempted_quiz():
                 attempted_quizzes[quiz.id] = {
                     'quiz_name': quiz.name,
                     'total_questions': len(quiz.questions),
-                    'attempt_count': 0  # Initialize attempt count
+                    'attempt_count': 0  
                 }
-            # Increment the attempt count for each quiz
+          
             attempted_quizzes[quiz.id]['attempt_count'] += 1
             # Add the score details as well
             attempted_quizzes[quiz.id].setdefault('scores', []).append({
@@ -563,7 +563,7 @@ def attempted_quiz():
             })
 
         else:
-            # If quiz doesn't exist, you can log this or handle it accordingly
+           
             print(f"Quiz with ID {score.quiz_id} not found.")
 
     # Prepare the data to pass to the template
@@ -600,7 +600,7 @@ def add_question(quiz_id):
             option_2=option_2,
             option_3=option_3,
             option_4=option_4,
-            correct_option=int(correct_option)  # Ensure correct_option is an integer (1-4)
+            correct_option=int(correct_option)  
         )
 
         # Add the question to the database
