@@ -624,23 +624,23 @@ def submit_quiz(quiz_id):
 
         # Loop through each question
         for question in questions:
-            user_answer = request.form.get(f'question_{question.id}')  # Get the user's answer
+            user_answer = request.form.get(f'question_{question.id}') 
 
-            # Check if the user's answer matches the correct option
+           
             if user_answer and int(user_answer) == question.correct_option:
                 score += 1
 
-        # Calculate the percentage of correct answers
+       
         percentage = (score / total_questions) * 100
 
-        # Get the user_id from the session
+        
         user_id = session.get('user_id')
 
         if not user_id:
             flash("User not logged in or session expired", "danger")
-            return redirect(url_for('login'))  # Redirect to login if user_id is not found in session
+            return redirect(url_for('login'))  
 
-        # **Create a new score entry every time the quiz is submitted**
+       
         new_score = Scores(
             user_id=user_id,
             quiz_id=quiz_id,
@@ -709,7 +709,7 @@ def user_scores():
 
     result = []
     for score in scores:
-        quiz = Quiz.query.get(score.quiz_id)  # Fetch the quiz associated with the score
+        quiz = Quiz.query.get(score.quiz_id)  
         if quiz:  
             result.append({
                 'quiz_name': quiz.name,
