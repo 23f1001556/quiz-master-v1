@@ -704,7 +704,7 @@ def user_scores():
         flash("User not found.", "danger")
         return redirect(url_for('login')) 
 
-    # Get all the scores related to this user, ordered by timestamp to show attempts in order
+
     scores = Scores.query.filter_by(user_id=user.id).order_by(Scores.timestamp.desc()).all()
 
     result = []
