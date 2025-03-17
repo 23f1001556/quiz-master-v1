@@ -532,16 +532,16 @@ def subjects():
 @app.route('/attempted_quiz', methods=['GET'])
 @authcheck
 def attempted_quiz():
-    # Get the user ID from the session (assuming the user is logged in)
+    
     user_id = session.get('user_id')
     if not user_id:
         flash("You must be logged in to view attempted quizzes.", "danger")
-        return redirect(url_for('login'))  # Redirect to login if user is not logged in
+        return redirect(url_for('login'))  
 
     # Fetch quizzes that the user has attempted (from Scores model)
     attempted_scores = Scores.query.filter_by(user_id=user_id).all()
 
-    # Prepare a list of quizzes the user attempted, with count of attempts
+    
     attempted_quizzes = {}
     for score in attempted_scores:
         quiz = Quiz.query.get(score.quiz_id)
