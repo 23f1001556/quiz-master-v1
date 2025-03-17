@@ -455,8 +455,8 @@ def manage_users_delete(id):
 @authcheck
 @admin_required
 def check_score():
-    # Fetch the user score details based on the user_id from the session or query string
-    user_id = request.args.get('user_id')  # Assuming user_id is passed as a query parameter
+    
+    user_id = request.args.get('user_id')  
     user=User.query.get(user_id)
     if  user.isadmin:
         flash('Master user has no score ')
@@ -512,7 +512,7 @@ def dashboard():
     # Close the plot to avoid memory issues
     plt.close(fig)
 
-    # Prepare the data dictionary to pass to the template
+    
     data = {
         'user_count': user_count,
         'quiz_attempts': quiz_attempts,
