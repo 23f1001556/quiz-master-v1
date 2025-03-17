@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admin - Subjects
+{% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Manage Subjects</h1>
+
+        <!-- Button Section: Align buttons to the right -->
+        <div class="button-container mb-4">
+            <a href="{{ url_for('admin_subjects') }}" class="btn btn-warning">Manage Subject</a>
+            <a href="{{ url_for('admin_chapters') }}" class="btn btn-warning">Manage Chapter</a>
+            <a href="{{ url_for('admin_quiz') }}" class="btn btn-warning">Manage Quiz</a>
+        </div>
+
+        <!-- Form for adding a new subject (with improved style) -->
+        <div class="form-container mb-5">
+            <form method="POST" class="form-inline">
+                <div class="form-group">
+                    <label for="subject_name" class="form-label"><strong>Subject Name:</strong></label>
+                    <div class="input-group">
+                        <input type="text" id="subject_name" name="subject_name" class="form-control" placeholder="Add new subject" required>
+                        <button type="submit" class="btn btn-success">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Table for displaying subjects -->
+        <div class="table-responsive">
+            <table class="table table-striped" id="subjtable">
+                <thead>
+                    <tr>
+                        <th>Subject ID</th>
+                        <th>Subject Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr> 
+                        <td>{{ subject.id }}</td>
+                        <td>{{ subject.name }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_subject', id=subject.id) }}" class="btn btn-primary btn-sm">
+                                Edit
+                            </a>
+                            <form action="{{ url_for('delete_subject', id=subject.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm"onclick="return confirm('Are you sure? This action cannot be undone!');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block style %}
+<style>
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    h1, h2 {
+        text-align: center;
+    }
+
+    /* Style for the button container */
+    .button-container {
+        display: flex;
+        justify-content: flex-end;  /* Align buttons to the right */
+        gap: 10px;
+        margin-bottom: 20px;  /* Add some spacing below the buttons */
+    }
+
+    /* Style for centering the form */
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        margin: 20px 0;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .form-inline .form-control {
+        width: auto;
+        max-width: 250px;
+    }
+
+    .form-inline button {
+        margin-left: 10px;
+    }
+
+    .table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .table th {
+        background-color: #0b2b4d;
+        color: white;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+
+    .table td div {
+        margin-bottom: 5px;
+    }
+
+    /* Added responsiveness to the layout */
+    @media (max-width: 768px) {
+        .form-inline {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-inline label, .form-inline select, .form-inline input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .button-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-warning {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    }
+    body {
+        background-size: cover;
+        background-image: url("{{ url_for('static', filename='admin1.jpg') }}");
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

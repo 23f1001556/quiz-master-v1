@@ -1,0 +1,214 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Admin - Chapters
+{% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+    
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Manage Chapters</h1>
+
+        <!-- Button Section: Align buttons to the right -->
+        <div class="button-container mb-4">
+            <a href="{{ url_for('admin_subjects') }}" class="btn btn-warning">Manage Subject</a>
+            <a href="{{ url_for('admin_chapters') }}" class="btn btn-warning">Manage Chapter</a>
+            <a href="{{ url_for('admin_quiz') }}" class="btn btn-warning">Manage Quiz</a>
+        </div>
+
+        <!-- Form for selecting subject and adding chapter -->
+        <div class="form-container mb-5">
+            <form method="POST" class="form-inline">
+                <!-- Subject Dropdown -->
+                <label for="subject" class="mr-2"><strong>Select a Subject:</strong></label>
+                <select name="subject" id="subject" class="form-control mr-2" required>
+                    <option value="" disabled selected>Select a subject</option>
+                    {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if subject.id == selected_subject_id %} selected {% endif %}>{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Chapter Name Input -->
+                <label for="chapter_name" class="mr-2"><strong>Chapter Name:</strong></label>
+                <input type="text" id="chapter_name" name="chapter_name" class="form-control mr-2" placeholder="Add new chapter" required>
+
+                <button type="submit" class="btn btn-success">Add Chapter</button>
+            </form>
+        </div>
+
+        <!-- Table for displaying subjects and their chapters -->
+        <div class="table-responsive">
+            <table class="table table-striped" id="subjtable">
+                <thead>
+                    <tr>
+                        <th>Subject ID</th>
+                        <th>Subject Name</th>
+                        <th>Chapters</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr>
+                        <td>{{ subject.id }}</td> 
+                        <td>{{ subject.name }}</td>
+                        <td>
+                            <!-- Display the chapters for this subject -->
+                            <ul>
+                                {% for chapter in subject.chapters %}
+                                <li>{{ chapter.name }}</li>
+                                {% else %}
+                                <li>No chapters available</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <!-- Place the Edit and Delete buttons below each other -->
+                            {% for chapter in subject.chapters %}
+                            <div>
+                                <a href="{{ url_for('edit_chapter', id=chapter.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                <form method="POST" action="{{ url_for('delete_chapter', id=chapter.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm"onclick="return confirm('Are you sure? This action cannot be undone!');">Delete</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block style %}
+<style>
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    h1, h2 {
+        text-align: center;
+    }
+
+    /* Style for the button container */
+    .button-container {
+        display: flex;
+        justify-content: flex-end;  /* Align buttons to the right */
+        gap: 10px;
+        margin-bottom: 20px;  /* Add some spacing below the buttons */
+    }
+
+    /* Style for each button container */
+    .manage-chapter-btn {
+        margin-top: 10px;
+    }
+
+    /* Style for centering the form */
+    .form-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        margin: 20px 0;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .form-inline .form-control {
+        width: auto;
+        max-width: 250px;
+    }
+
+    .form-inline button {
+        margin-left: 10px;
+    }
+
+    .table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .table th {
+        background-color: #0b2b4d;
+        color: white;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table ul {
+        padding-left: 20px;
+    }
+
+    .btn {
+        margin-top: 5px;
+    }
+
+    /* Small Buttons for Edit and Delete */
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+
+    .table td div {
+        margin-bottom: 5px;
+    }
+
+    /* Added responsiveness to the layout */
+    @media (max-width: 768px) {
+        .form-inline {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-inline label, .form-inline select, .form-inline input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .button-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-warning {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+    }
+    body {
+        background-size: cover;
+        background-image: url("{{ url_for('static', filename='admin1.jpg') }}");
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

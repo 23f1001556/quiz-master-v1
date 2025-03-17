@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+
+{% block title %} Add Question to {{ quiz.name }} {% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+    <br>
+    <h1 class="form-title">Add Question to {{ quiz.name }}</h1>
+
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="question_statement">Question:</label>
+                <textarea name="question_statement" id="question_statement" class="for-control" rows="4" placeholder="Enter the question statement" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Options:</label><br>
+                <div class="radio-option">
+                    <label for="option_1">
+                        <input type="radio" name="correct_option" value="1" required> Option 1
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label for="option_2">
+                        <input type="radio" name="correct_option" value="2"> Option 2
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label for="option_3">
+                        <input type="radio" name="correct_option" value="3"> Option 3
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label for="option_4">
+                        <input type="radio" name="correct_option" value="4"> Option 4
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="option_1">Option 1:</label>
+                <input type="text" name="option_1" id="option_1" class="for-input" placeholder="Enter option 1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="option_2">Option 2:</label>
+                <input type="text" name="option_2" id="option_2" class="for-input" placeholder="Enter option 2" required>
+            </div>
+
+            <div class="form-group">
+                <label for="option_3">Option 3:</label>
+                <input type="text" name="option_3" id="option_3" class="for-input" placeholder="Enter option 3" required>
+            </div>
+
+            <div class="form-group">
+                <label for="option_4">Option 4:</label>
+                <input type="text" name="option_4" id="option_4" class="for-input" placeholder="Enter option 4" required>
+            </div>
+
+            <div class="form-group text-center">
+                <button type="submit" class="submit-btn">Add Question</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block style %}
+<style>
+    /* Title Styling */
+    .form-title {
+        text-align: center;
+        font-size: 2rem;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* Main form container */
+    .form-container {
+        padding: 2% 4%;
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Grouping each form element */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    /* Styling for input and textarea */
+    .for-input, .for-control {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        box-sizing: border-box; /* Ensures padding doesn't break the width */
+    }
+
+    .for-input:focus, .for-control:focus {
+        border-color: #5cb85c;
+        box-shadow: 0 0 5px rgba(92, 184, 92, 0.5);
+    }
+
+    /* Styling for radio options */
+    .radio-option {
+        margin-bottom: 10px;
+    }
+
+    /* Styling for the submit button */
+    .submit-btn {
+        padding: 12px 25px;
+        font-size: 1.1em;
+        background-color: #5cb85c;
+        color: white;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        background-color: #4cae4c;
+    }
+
+    /* Centering the button */
+    .text-center {
+        text-align: center;
+    }
+    body {
+        background-size: cover;
+        background-image: url("{{ url_for('static', filename='admin1.jpg') }}");
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

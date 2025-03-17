@@ -1,0 +1,91 @@
+<div class="navbar">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('home') }}">Quizmaster</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse d-flex justify-content-between" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+          </li>
+        </ul>
+
+        <!-- Centered Search Form -->
+        <div class="d-flex justify-content-center flex-grow-1">
+          <form action="{{ url_for('search') }}" method="get" class="d-flex w-50">
+            <input type="text" name="search-query" placeholder="Search" required class="form-control me-2"/>
+            <button type="submit" class="btn btn-success">Search</button>
+          </form>
+        </div>
+
+        <a href="{{ url_for('signout') }}" class="btn btn-danger ms-3">Signout</a>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<style>
+/* Navbar Styling */
+.navbar {
+  width: 100%;
+  padding: 0;
+}
+
+/* Flexbox styling for the entire navbar */
+.navbar .collapse {
+  display: flex;
+  justify-content: space-between;  /* Align items on opposite ends */
+  width: 100%;
+}
+
+.navbar .navbar-nav {
+  margin-right: 20px;  /* Space the navbar items */
+}
+
+/* Centered search form styling */
+.navbar .d-flex.justify-content-center {
+  flex-grow: 1; /* Make the search form take up available space */
+  display: flex;
+  justify-content: center; /* Center search bar */
+}
+
+.navbar .form-control {
+  width: 100%;
+  max-width: 300px;  /* Limit the maximum width */
+  min-width: 150px;
+}
+
+.navbar .btn-success {
+  margin-left: 5px;
+}
+
+/* Styling for the signout button */
+.navbar .btn-danger {
+  margin-left: 10px;
+}
+
+/* Mobile view adjustments */
+@media (max-width: 768px) {
+  /* Stack the navbar elements vertically on mobile */
+  .navbar .collapse {
+    flex-direction: column; /* Stack elements */
+    align-items: center; /* Align navbar items to center */
+  }
+  .navbar .d-flex.justify-content-center {
+    margin-top: 10px;
+    width: 100%;  /* Allow the search bar to take full width on small screens */
+  }
+
+  .navbar .form-control {
+    max-width: 250px;
+    width: 100%;
+  }
+
+  .navbar .btn-danger {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+</style>

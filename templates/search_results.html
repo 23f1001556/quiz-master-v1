@@ -1,0 +1,111 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Search Results
+{% endblock %}
+
+{% include 'navbar.html' %}
+
+{% block content %}
+    <h1>Search Results for "{{ query }}"</h1>
+    <hr>
+    
+    <div class="search-results-container">
+        <!-- Users Section -->
+        <div class="search-results-box">
+            <h2>Users</h2>
+            {% if users %}
+                <ul>
+                    {% for user in users %}
+                        <li>{{ user.user_name }}</li> <!-- Display user name here -->
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No users found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Subjects Section -->
+        <div class="search-results-box">
+            <h2>Subjects</h2>
+            {% if subjects %}
+                <ul>
+                    {% for subject in subjects %}
+                        <li>{{ subject.name }}</li> <!-- Display subject name here -->
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No subjects found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Chapters Section -->
+        <div class="search-results-box">
+            <h2>Chapters</h2>
+            {% if chapters %}
+                <ul>
+                    {% for chapter in chapters %}
+                        <li>{{ chapter.name }}</li> <!-- Display chapter name here -->
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No chapters found.</p>
+            {% endif %}
+        </div>
+
+        <!-- Quizzes Section -->
+        <div class="search-results-box">
+            <h2>Quizzes</h2>
+            {% if quiz %}
+                <ul>
+                    {% for q in quiz %}
+                        <li>{{ q.name }}</li> <!-- Display quiz name here -->
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No quizzes found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{%block style%}
+
+<style>
+    /* Styling for the main container that holds all 4 boxes */
+.search-results-container {
+    display: flex;
+    flex-direction: column; /* Stack the divs vertically */
+    gap: 20px; /* Add space between each box */
+    padding: 20px;
+}
+
+/* Common styling for each of the result boxes */
+.search-results-box {
+    border: 2px solid #ccc; /* Add a light border around the box */
+    padding: 20px;
+    background-color: #f9f9f9; /* Light background color */
+    border-radius: 8px; /* Rounded corners for a nicer look */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+}
+
+/* Add some styling for headings inside each box */
+.search-results-box h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* Optional: Styling for the list items inside each section */
+.search-results-box ul {
+    list-style-type: none; /* Remove default list bullets */
+    padding-left: 0; /* Remove padding on the left */
+}
+
+.search-results-box li {
+    margin: 5px 0; /* Add space between each list item */
+}
+
+</style>
+
+{%endblock%}

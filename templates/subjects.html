@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+
+{% include 'navbar.html' %}
+<br>
+<h1 class="heading">Subjects</h1>
+<br>
+<table class="subjtable">
+    <thead>
+        <tr>
+            <th>Subjects</th>
+            <th>Chapters</th>
+            <th>Quiz</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for subject in subjects %}
+            {% for chapter in subject.chapters %}
+                {% for quiz in chapter.quizzes %}
+                    <tr>
+                        <td>{{ subject.name }}</td>
+                        <td>{{ chapter.name }}</td>
+                        <td>{{ quiz.name }}</td>
+                        <td>
+                            <a href="{{ url_for('submit_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Attempt Test</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block style %}
+<style>
+/* Center the heading */
+.heading {
+    text-align: center;
+}
+
+/* Center the table horizontally and add some padding */
+.subjtable {
+    margin: 0 auto;
+    padding: 15px;
+    width: 80%; /* You can adjust the width if necessary */
+    border-collapse: collapse; /* Makes the table borders collapse into a single border */
+    background-color: #f9f9f9; /* Light background color */
+}
+
+/* Style the table headers */
+.subjtable th {
+    background-color: #007BFF;
+    color: white;
+    padding: 8px;
+    text-align: left;
+}
+
+/* Style the table data cells */
+.subjtable td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Hover effect for rows */
+.subjtable tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Button style for "Attempt Test" */
+.btn-primary {
+    background-color: #007BFF;
+    color: white;
+    padding: 5px 10px;
+    text-decoration: none;
+    border-radius: 3px;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+</style>
+{% endblock %}

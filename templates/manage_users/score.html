@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %} User Score {% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+
+    <h1>User Score</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Quiz Name</th>
+                <th>Total Score</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if scores %}
+                {% for score in scores %}
+                    <tr>
+                        <td>{{ score.quiz.name }}</td>  <!-- Assuming `quiz` is a related model -->
+                        <td>{{ score.total_score }}</td>
+                        <td>
+                            <a href="{{ url_for('view_quiz_results', quiz_id=score.quiz_id) }}" class="btn btn-info">View Results</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">No scores available for this user.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+{% endblock %}
+
+{% block style %}
+<style>
+    h1 {
+        text-align: center;
+    }
+
+    .table {
+        width: 80%;
+        margin: 20px auto;
+    }
+    body {
+        background-size: cover;
+        background-image: url("{{ url_for('static', filename='admin1.jpg') }}");
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

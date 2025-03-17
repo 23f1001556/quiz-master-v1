@@ -1,0 +1,153 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+    <br>
+    <h1 class="text-center">Edit Profile</h1>
+    <h2 class="text-center text-muted">Welcome, {{ user.user_name }}</h2>
+
+    <div id="profile-panel" class="container">
+        <div class="row">
+            <!-- Left side: Form for editing user details -->
+            <div class="col-md-6">
+                <form id="edit-profile-form" method="post">
+                    <div class="form-group-custom">
+                        <label for="user_name">New Username</label>
+                        <input type="text" name="user_name" id="user_name" class="form-control-custom" value="{{ user.user_name }}" required>
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="email">New Email</label>
+                        <input type="email" name="email" id="email" class="form-control-custom" required value="{{ user.email }}">
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" name="fullname" id="fullname" class="form-control-custom" value="{{ user.fullname }}">
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="qualification">Qualification</label>
+                        <input type="text" name="qualification" id="qualification" class="form-control-custom" value="{{ user.qualification }}">
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="dob_str">Date of Birth</label>
+                        <input type="date" name="dob" id="dob" class="form-control-custom" value="{{ user.dob }}">
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="password">Set New Password</label>
+                        <input type="password" name="password" id="password" class="form-control-custom">
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="currentpassword">Current Password</label>
+                        <input type="password" name="currentpassword" id="currentpassword" class="form-control-custom" required>
+                    </div>
+
+                    <button type="submit" class="btn-custom btn-primary btn-block-custom">Update</button>
+                </form>
+            </div>
+
+            <!-- Right side: Current user data -->
+            <div id="current-data-panel" class="col-md-6">
+                <h2 class="text-center">Current Data</h2>
+                <br>
+                <h4><strong>Email:</strong>  {{ user.email }}</h4>
+                <h4><strong>Fullname:</strong>  {{ user.fullname }}</h4>
+                <h4><strong>Username:</strong>  {{ user.user_name }}</h4>
+                <h4><strong>Date of Birth:</strong>  {{ user.dob }}</h4>
+                <h4><strong>Qualification:</strong>  {{ user.qualification }}</h4>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block style %}
+<style>
+    /* Page title */
+    h1 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+
+    /* Form styling */
+    .form-group-custom {
+        margin-bottom: 15px;
+    }
+
+    .form-group-custom label {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .form-control-custom {
+        border-radius: 5px;
+        box-shadow: none;
+        padding: 10px;
+        font-size: 1rem;
+        width: 100%;
+    }
+
+    .btn-custom {
+        font-size: 1.2rem;
+        padding: 10px 20px;
+    }
+
+    /* Form layout */
+    #profile-panel {
+        margin-top: 30px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .col-md-6 {
+        flex: 0 0 48%;
+    }
+
+    /* Right panel (current data) */
+    #current-data-panel h4 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    /* Center all text in the profile section */
+    .text-center {
+        text-align: center;
+    }
+
+    /* Adjust button size and width */
+    .btn-block-custom { 
+        width: 100%;
+        color: blue;
+    }
+    body {
+        background-size: cover;
+        background-image: url("{{ url_for('static', filename='admin1.jpg') }}");
+        background-repeat: no-repeat;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

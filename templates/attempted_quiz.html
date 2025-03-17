@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Attempted Quizzes
+{% endblock %}
+
+{% block content %}
+    {% include 'navbar.html' %}
+    <br>
+    <h1>Attempted Quizzes</h1>
+
+    {% if attempted_quizzes %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Quiz Name</th>
+                <th>Number of Attempts</th>
+                <th>Score</th>
+                <th>Date Attempted</th>
+                <th>Total Questions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quiz in attempted_quizzes %}
+                <tr>
+                    <td>{{ quiz.quiz_name }}</td>
+                    <td>{{ quiz.attempt_count }}</td> <!-- Number of attempts -->
+                    <td>
+                        {% for attempt in quiz.scores %}
+                            {{ attempt.score }} / 100 <br>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for attempt in quiz.scores %}
+                            {{ attempt.date_attempted }} <br>
+                        {% endfor %}
+                    </td>
+                    <td>{{ quiz.total_questions }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No quizzes attempted yet.</p>
+    {% endif %}
+    
+{% endblock %}
+
+{% block style %}
+<style>
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 36px;
+        font-weight: bold;
+    }
+
+    table {
+        width: 80%;
+        margin: 0 auto;
+        border-collapse: collapse;
+        border: 1px solid #ddd;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f4f4f4;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table {
+        font-size: 14px;
+        margin-top: 20px;
+    }
+
+    .table td, .table th {
+        text-align: center;
+    }
+
+    .no-quizzes {
+        font-size: 16px;
+        text-align: center;
+        color: #555;
+    }
+</style>
+{% endblock %}

@@ -714,7 +714,7 @@ def user_scores():
             result.append({
                 'quiz_name': quiz.name,
                 'score': score.total_score,
-                'date': score.timestamp.strftime('%Y-%m-%d'),  # Display the date of the attempt
+                'date': score.timestamp.strftime('%Y-%m-%d'),
             })
         else:
             print(f"Quiz with ID {score.quiz_id} not found.")  

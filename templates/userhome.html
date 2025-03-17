@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+
+{% block title %} User-Home {% endblock %}
+
+{% block content %} 
+
+<!-- Navbar -->
+{% include 'navbar.html' %}
+
+<h1 class="heading">Welcome  @{{user.user_name}}</h1>
+<div class="container mt-4">
+  <!-- Flex container for cards, ensuring they are well spaced and aligned -->
+  <div class="d-flex justify-content-center flex-wrap gap-4">
+    <!-- Card for Subjects -->
+    <div class="card mb-4" style="width: 18rem;">
+      <img class="card-img-top" src="{{ url_for('static', filename='subjects.jpg') }}" alt="Card image cap">
+      <div class="card-body">
+        <h5 class="card-title">Subjects</h5>
+        <p class="card-text">Add subjects in the course.</p>
+        <a href="{{ url_for('subjects') }}" class="btn btn-primary">View Subjects</a>
+      </div>
+    </div>
+    
+    <!-- Card for User Dashboard -->
+    <div class="card mb-4" style="width: 18rem;">
+      <img class="card-img-top" src="{{ url_for('static', filename='attempted_quiz.jpg') }}" alt="Card image cap">
+      <div class="card-body">
+        <h5 class="card-title">Attempted Quiz</h5>
+        <p class="card-text">View your attempted quiz.</p>
+        <a href="{{ url_for('attempted_quiz') }}" class="btn btn-primary">View Attempted Quiz</a>
+      </div>
+    </div>
+
+    <!-- Card for User Profile -->
+    <div class="card mb-4" style="width: 18rem;">
+      <img class="card-img-top" src="{{ url_for('static', filename='result.jpg') }}" alt="Card image cap">
+      <div class="card-body">
+        <h5 class="card-title">Result</h5>
+        <p class="card-text">View Result.</p>
+        <a href="{{ url_for('user_scores') }}" class="btn btn-primary">View Result</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block style %}
+<style>
+  /* Heading Styling */
+  
+  .heading {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 2rem;
+  }
+
+  /* Card Image Styling */
+  .card-img-top {
+    height: 200px; /* Ensures uniform size for images */
+    object-fit: cover;
+  }
+
+  /* Flex container for cards */
+  .d-flex {
+    display: flex;
+    justify-content: center; /* Centers the cards horizontally */
+    flex-wrap: wrap; /* Wraps cards on small screens */
+    gap: 1.5rem; /* Adds spacing between cards */
+  }
+
+  /* Card Styling */
+  .card {
+    max-width: 18rem; /* Ensures cards stay within the same size */
+    margin-bottom: 20px; /* Adds space at the bottom of each card */
+    border-radius: 8px; /* Rounded corners for the cards */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth hover effect */
+  }
+
+  /* Hover effect on cards */
+  .card:hover {
+    transform: translateY(-5px); /* Slightly lift the card */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Darker shadow */
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .d-flex {
+      justify-content: center; /* Center the cards */
+    }
+
+    .card {
+      width: 100%; /* Ensures cards take full width on smaller screens */
+      max-width: 300px; /* Keeps the card size reasonable */
+    }
+  }
+</style>
+{% endblock %}

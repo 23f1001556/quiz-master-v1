@@ -13,12 +13,13 @@ class User(db.Model):
     __tablename__ = "users"
     
     id = db.Column(db.Integer, primary_key=True)
+    user_name=db.Column(db.String(30),unique=True,nullable=False)
     email = db.Column(db.String(50), nullable=False, unique=True)
     _password = db.Column("password", db.String(255), nullable=False)  # Store the hashed password here
-    fullname = db.Column(db.String(80), nullable=False)
+    fullname = db.Column(db.String(80))
     qualification = db.Column(db.String(100))
     dob = db.Column(db.Date)
-    isadmin = db.Column(db.Boolean, nullable=False, default=True)
+    isadmin = db.Column(db.Boolean, nullable=False, default=False)
 
     # Relationship with Scores
     scores = db.relationship('Scores', back_populates='user', cascade="all, delete-orphan")
@@ -33,31 +34,40 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self._password, password)  # Use _password for verification
-
-class Subject(db.Model):
-    __tablename__ = "subject"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=True, nullable=False)
-    description = db.Column(db.String(100), nullable=False)
-    chapters = db.relationship('Chapter', backref='subject', lazy=True)
-
 class Chapter(db.Model):
     __tablename__ = "chapter"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
-    quizzes = db.relationship('Quiz', backref='chapter', lazy=True)
-    questions = db.relationship('Question', backref='chapter', lazy=True)
+    
+    # Cascade delete all quizzes when a chapter is deleted
+    quizzes = db.relationship('Quiz', backref='chapter', lazy=True, cascade='all, delete')
+
+    # Cascade delete all questions when a chapter is deleted
+    questions = db.relationship('Question', backref='chapter', lazy=True, cascade='all, delete')
+
+class Subject(db.Model):
+    __tablename__ = "subject"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True, nullable=False)
+    description = db.Column(db.String(100))
+    
+    # Cascade delete all chapters when a subject is deleted
+    chapters = db.relationship('Chapter', backref='subject', lazy=True, cascade='all, delete')
+
 
 class Quiz(db.Model):
     __tablename__ = "quiz"
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
     chapter_id = db.Column(db.Integer, db.ForeignKey('chapter.id'), nullable=False)
     date_of_quiz = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    time_duration = db.Column(db.String(5), nullable=False)  # hh:mm format
+    time_duration = db.Column(db.String(5), nullable=True)  # hh:mm format
     remarks = db.Column(db.Text)
-    questions = db.relationship('Question', backref='quiz', lazy=True)
+    questions = db.relationship('Question', backref='quiz', lazy=True, cascade='all, delete')
+
+
 
 class Question(db.Model):
     __tablename__ = "question"
@@ -78,6 +88,7 @@ class Scores(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
     total_score = db.Column(db.Integer, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Define the back_populates for the relationship
     user = db.relationship('User', back_populates='scores')
@@ -87,8 +98,8 @@ class Scores(db.Model):
 with app.app_context():
     db.create_all()
 
-    admin=User.query.filter_by(email='admin').first()
+    admin=User.query.filter_by(user_name='admin').first()
     if not admin:
-        admin=User(email='admin',password='admin',fullname='Admin',isadmin=True)
+        admin=User(user_name='admin',email='admin@gmail.com',qualification='Admin',password='admin',fullname='Admin',isadmin=True)
         db.session.add(admin)
         db.session.commit()
