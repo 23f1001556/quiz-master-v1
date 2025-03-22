@@ -214,7 +214,7 @@ def admin_subjects():
             flash('This subject already exists! Please try adding a different one.', 'error')
             return redirect(url_for('subjects'))  # Redirect back to the subjects page
         
-        # If not, create a new subject and add it to the database
+       
         new_subject = Subject(name=name)
         db.session.add(new_subject)
         db.session.commit()
