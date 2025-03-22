@@ -232,7 +232,7 @@ def admin_subjects():
 @authcheck
 @admin_required
 def edit_subject(id):
-    subject = Subject.query.get(id)  # Use id to get the subject
+    subject = Subject.query.get(id) 
     if not subject:
         flash('Subject does not exist.')
         return redirect(url_for('admin_subjects'))
