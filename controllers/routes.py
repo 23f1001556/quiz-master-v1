@@ -239,12 +239,12 @@ def edit_subject(id):
 
     # Handle POST request to update subject
     if request.method == 'POST':
-        new_name = request.form['subject_name']  # Get the new name from the form
+        new_name = request.form['subject_name']  
         if new_name:
-            subject.name = new_name  # Update the subject's name
+            subject.name = new_name 
             db.session.commit()
             flash('Subject updated successfully.')
-            return redirect(url_for('admin_subjects'))  # Redirect after update
+            return redirect(url_for('admin_subjects'))  
 
     return render_template('subject/edit.html', subject=subject)
 
