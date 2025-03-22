@@ -221,7 +221,7 @@ def admin_subjects():
 
         flash('Subject added successfully!', 'success')
 
-    # Fetch all subjects after adding the new one (if any)
+    
     subjects = Subject.query.all()
 
     # Render the template with the list of subjects
