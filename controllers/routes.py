@@ -28,7 +28,7 @@ def admin_required(func):
             return redirect(url_for(login))
         user=User.query.get(session['user_id'])
         if not user.isadmin:
-            flash ('You are not authorized to view this page')
+            flash ('You are not authorized to view this page','danger')
             return redirect(url_for('home'))
         return func(*args,**kwargs)
     return inner 
@@ -48,12 +48,13 @@ def login_post():
         return redirect(url_for('login'))
     user = User.query.filter_by(user_name=user_name).first()
     if not user:
-        flash('User does not exist, please register')
+        flash('User does not exist, please register','info')
         return redirect(url_for('signup'))
     if not user.check_password(password):
-        flash('Password is incorrect')
+        flash('Password is incorrect','warning')
         return redirect(url_for('login'))
       # Both correct, successful login
+    flash('login-sucessfull!','success')
     session['user_id']=user.id
     return redirect(url_for('home'))
 
@@ -76,12 +77,12 @@ def signup_post():
         flash('User already exists')
         return redirect(url_for('login'))
     if User.query.filter_by(email=email).first():
-        flash('This email already exists try another')
+        flash('This email already exists try another','info')
         return redirect(url_for('signup'))
     user=User(user_name=user_name,password=password,email=email)
     db.session.add(user)
     db.session.commit()
-    flash('User registered successfully')
+    flash('User registered successfully','success')
     return redirect(url_for('login'))
 #dashboard page for user and admin check role and redirect to user or admin
 @app.route('/home')
@@ -100,7 +101,7 @@ def home():
 def admin():
     user = User.query.get(session['user_id'])
     if not User.isadmin:
-        flash('You are not authorized to view this page')
+        flash('You are not authorized to view this page','danger')
     return render_template("admin.html", User=user)
 
 #route for user
@@ -109,7 +110,7 @@ def admin():
 def people():
     user = User.query.get(session['user_id'])
     if user.isadmin: 
-        flash("Not authorized to vie this page")
+        flash("Not authorized to vie this page",'danger')
         return redirect(url_for('home'))
     return render_template("userhome.html", user=user)
 
@@ -141,10 +142,10 @@ def profile_post():
     password=request.form.get('password')
     current_password=request.form.get('currentpassword')
     if not user.check_password(current_password):
-        flash('current password is incorrect please try again!')
+        flash('current password is incorrect please try again!','danger')
         return redirect(url_for('profile'))
     if User.query.filter_by(user_name=user_name).first() and user_name !=user.user_name:
-         flash('Username already exists plaese choose another')
+         flash('Username already exists plaese choose another','warning')
          return redirect(url_for('profile'))
     user.user_name=user_name
     user.email=email
@@ -153,7 +154,7 @@ def profile_post():
     user.dob=dob
     user.password=password
     db.session.commit()
-    flash('Profile updated successfully')
+    flash('Profile updated successfully','success')
     return redirect(url_for('profile'))
 
 
@@ -243,7 +244,7 @@ def edit_subject(id):
         if new_name:
             subject.name = new_name 
             db.session.commit()
-            flash('Subject updated successfully.')
+            flash('Subject updated successfully.','success')
             return redirect(url_for('admin_subjects'))  
 
     return render_template('subject/edit.html', subject=subject)
@@ -255,12 +256,12 @@ def edit_subject(id):
 def delete_subject(id):
     subject=Subject.query.get(id)
     if not subject:
-        flash ("subject doesnot exists")
+        flash ("subject doesnot exists",'info')
         return redirect(url_for('admin_subjects'))
     if subject:
         db.session.delete(subject)
         db.session.commit()
-        flash(" subject deleted successfully")
+        flash(" subject deleted successfully",'success')
         return redirect(url_for('admin_subjects'))
     return render_template('subject/delete.html')
 
@@ -285,7 +286,7 @@ def admin_chapters():
             new_chapter = Chapter(name=chapter_name, subject_id=subject_id)
             db.session.add(new_chapter)
             db.session.commit()
-            flash('Chapter added successfully!')
+            flash('Chapter added successfully!','success')
         
         return redirect(url_for('admin_chapters'))
 
@@ -297,14 +298,14 @@ def admin_chapters():
 def edit_chapter(id):
     chapter = Chapter.query.get(id)
     if not chapter:
-        flash('Chapter does not exist.')
+        flash('Chapter does not exist.','info')
         return redirect(url_for('admin_chapters'))
     if request.method == 'POST':
         new_name = request.form.get('chapter_name')
         if new_name:
             chapter.name = new_name
             db.session.commit()
-            flash('Chapter updated successfully')
+            flash('Chapter updated successfully','success')
             return redirect(url_for('admin_chapters'))
     return render_template('chapter/edit.html', chapter=chapter)
 
@@ -316,12 +317,12 @@ def edit_chapter(id):
 def delete_chapter(id):
     chapter=Chapter.query.get(id)
     if not chapter:
-        flash("chapter doesnot exists")
+        flash("chapter doesnot exists",'warning')
         return redirect(url_for('admin_chapters'))
     if chapter:
         db.session.delete(chapter)
         db.session.commit()
-        flash("chapter deleted successfully")
+        flash("chapter deleted successfully",'success')
         return redirect(url_for('admin_chapters'))
     return render_template('chapter/delete.html')
 
@@ -336,7 +337,7 @@ def editquizx():
 def edit_quiz(id):
     quiz = Quiz.query.get(id)
     if not quiz:
-        flash('Quiz does not exist.')
+        flash('Quiz does not exist.','warning')
         return redirect(url_for('admin_quiz'))
 
     if request.method == 'POST':
@@ -358,7 +359,7 @@ def edit_quiz(id):
                 db.session.commit()
 
         db.session.commit()
-        flash('Quiz updated successfully')
+        flash('Quiz updated successfully','success')
         return redirect(url_for('admin_quiz'))
 
     return render_template('quiz/edit.html', quiz=quiz)
@@ -371,12 +372,12 @@ def edit_quiz(id):
 def delete_quiz(id):
     quiz=Quiz.query.get(id)
     if not quiz:
-        flash("quiz doesnot exists")
+        flash("quiz doesnot exists",'warning')
         return redirect(url_for('admin_quiz'))
     if quiz:
         db.session.delete(quiz)
         db.session.commit()
-        flash("quiz deleted successfully")
+        flash("quiz deleted successfully",'success')
         return redirect(url_for('admin_quiz'))
     return render_template('quiz/delete.html')
 
@@ -431,18 +432,18 @@ def manage_users():
 def manage_users_delete(id):
     user = User.query.get(id)  
     if not user:
-        flash('User not found.')
+        flash('User not found.','warning')
         return redirect(url_for('manage_users'))
 
     # Check if the user is an admin
     if user.user_name == "admin":  
-        flash('Master user cannot be deleted.')
+        flash('Master user cannot be deleted.','warning')
         return redirect(url_for('manage_users'))
     
     # Delete the user
     db.session.delete(user)
     db.session.commit()
-    flash('User deleted successfully.')
+    flash('User deleted successfully.','success')
 
     # Redirect to the user management page
     return redirect(url_for('manage_users'))
@@ -459,7 +460,7 @@ def check_score():
     user_id = request.args.get('user_id')  
     user=User.query.get(user_id)
     if  user.isadmin:
-        flash('Master user has no score ')
+        flash('Master user has no score ','info')
         return redirect(url_for('manage_users'))
     if user_id:
         scores = Scores.query.filter_by(user_id=user_id).all()
