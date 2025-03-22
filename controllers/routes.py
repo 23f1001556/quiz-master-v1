@@ -429,13 +429,13 @@ def manage_users():
 @authcheck
 @admin_required
 def manage_users_delete(id):
-    user = User.query.get(id)  # Fetch the user from the database
+    user = User.query.get(id)  
     if not user:
         flash('User not found.')
         return redirect(url_for('manage_users'))
 
     # Check if the user is an admin
-    if user.user_name == "admin":  # Assuming "admin" is a user_name identifier
+    if user.user_name == "admin":  
         flash('Master user cannot be deleted.')
         return redirect(url_for('manage_users'))
     
