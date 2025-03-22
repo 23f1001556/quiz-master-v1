@@ -395,17 +395,17 @@ def admin_quiz():
         # Create a new quiz object
         new_quiz = Quiz(name=quiz_name, chapter_id=chapter_id)
 
-        # Add the quiz to the session and commit to the database
+        
         db.session.add(new_quiz)
         db.session.commit()
 
-        # Flash success message
+      
         flash('Quiz added successfully!', 'success')
 
-        # Redirect to the quiz management page (to avoid form resubmission)
+        
         return redirect(url_for('admin_quiz'))
 
-    # GET request: Retrieve subjects and chapters to display in the form
+   
     subjects = Subject.query.all()
     return render_template('admin_quiz.html', subjects=subjects)
 
@@ -421,8 +421,8 @@ def quiz_form():
 @authcheck
 @admin_required
 def manage_users():
-    users = User.query.all()  # Get all users from the database
-    return render_template('manage_users.html', users=users)  # Pass the users list to the template
+    users = User.query.all()  
+    return render_template('manage_users.html', users=users) 
 
 #deleting users
 @app.route('/manage_users_delete/<int:id>', methods=['POST'])
