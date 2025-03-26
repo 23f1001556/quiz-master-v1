@@ -129,32 +129,44 @@ def profile():
     user = User.query.get(session['user_id'])
     return render_template("profile.html", user=user)
 
-@app.route('/profile',methods=['POST'])
+@app.route('/profile', methods=['POST'])
 @authcheck
 def profile_post():
-    user=User.query.get(session['user_id'])
-    user_name=request.form.get('user_name')
-    email=request.form.get('email')
-    fullname=request.form.get('fullname')
-    qualification=request.form.get('qualification')
-    dob_str=request.form.get('dob')
+    user = User.query.get(session['user_id'])
+    user_name = request.form.get('user_name')
+    email = request.form.get('email')
+    fullname = request.form.get('fullname')
+    qualification = request.form.get('qualification')
+    dob_str = request.form.get('dob')
     dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
-    password=request.form.get('password')
-    current_password=request.form.get('currentpassword')
+    password = request.form.get('password')
+    current_password = request.form.get('currentpassword')
+
+    # Check if the current password entered is correct
     if not user.check_password(current_password):
-        flash('current password is incorrect please try again!','danger')
+        flash('Current password is incorrect. Please try again!', 'danger')
         return redirect(url_for('profile'))
-    if User.query.filter_by(user_name=user_name).first() and user_name !=user.user_name:
-         flash('Username already exists plaese choose another','warning')
-         return redirect(url_for('profile'))
-    user.user_name=user_name
-    user.email=email
-    user.fullname=fullname
-    user.qualification=qualification
-    user.dob=dob
-    user.password=password
+
+    # Check if the new username already exists
+    if User.query.filter_by(user_name=user_name).first() and user_name != user.user_name:
+        flash('Username already exists. Please choose another.', 'warning')
+        return redirect(url_for('profile'))
+
+    # Update profile details
+    user.user_name = user_name
+    user.email = email
+    user.fullname = fullname
+    user.qualification = qualification
+    user.dob = dob
+
+    
+    if password:  
+        user.password = password
+
+    # Commit the changes to the database
     db.session.commit()
-    flash('Profile updated successfully','success')
+
+    flash('Profile updated successfully', 'success')
     return redirect(url_for('profile'))
 
 
