@@ -1,0 +1,112 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="landing-hero">
+    <div class="hero-text">
+        <h1>Welcome to Quizzy</h1>
+        <p>Create quizzes as a teacher. Take quizzes as a student.</p>
+
+        <div class="cta-buttons">
+            <a href="{{ url_for('login') }}" class="btn primary">Get Started</a>
+        </div>
+    </div>
+
+    <div class="hero-image">
+        <img src="{{ url_for('static', filename='main1.png') }}" alt="Quiz App Hero Image">
+    </div>
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+/* Container */
+.landing-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 60px 5%;
+    background: linear-gradient(to right, #fefefe, #e3f2fd);
+    min-height: 90vh;
+}
+
+/* Text Section */
+.hero-text {
+    max-width: 50%;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    color: #1976d2;
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    color: #333;
+    margin-top: 10px;
+}
+
+.cta-buttons {
+    margin-top: 30px;
+}
+
+.cta-buttons .btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    margin-right: 15px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.3s ease;
+    display: inline-block;
+}
+
+/* Primary CTA */
+.btn.primary {
+    background-color: #1976d2;
+    color: white;
+}
+
+.btn.primary:hover {
+    background-color: #1565c0;
+}
+
+/* Secondary CTA */
+.btn.secondary {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #1976d2;
+}
+
+.btn.secondary:hover {
+    background-color: #bbdefb;
+}
+
+/* Image Section */
+.hero-image {
+    max-width: 45%;
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .landing-hero {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .hero-text, .hero-image {
+        max-width: 100%;
+    }
+
+    .cta-buttons .btn {
+        margin-bottom: 15px;
+    }
+}
+</style>
+{% endblock %}
