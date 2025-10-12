@@ -33,9 +33,12 @@ def admin_required(func):
         return func(*args,**kwargs)
     return inner 
 
+@app.route('/')
+def landing():
+    return render_template("landing/landingmain.html")
 
 #login route and login post route
-@app.route('/')
+@app.route('/login')
 def login():
     return render_template("login.html")
 
