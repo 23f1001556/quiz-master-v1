@@ -1,5 +1,6 @@
 # Quiz Master v1
 
+<img src="./video.gif" width="600" alt="Quiz Master Demo" />
 A full-stack Flask-based quiz application that allows users to register, login, and take quizzes on various subjects and chapters. Admins can manage subjects, chapters, quizzes, questions, and users through a comprehensive admin panel.
 
 ## Why I Built This
