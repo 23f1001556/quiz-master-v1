@@ -1,0 +1,1019 @@
+openapi: 3.0.3
+info:
+  title: Quiz Master v1 API
+  description: REST API for the Quiz Master quiz application
+  version: 1.0.0
+  contact:
+    name: Quiz Master Support
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+    basicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_name:
+          type: string
+        email:
+          type: string
+        fullname:
+          type: string
+        qualification:
+          type: string
+        dob:
+          type: string
+          format: date
+        isadmin:
+          type: boolean
+      required:
+        - user_name
+        - email
+
+    Subject:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - name
+
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        subject_id:
+          type: integer
+      required:
+        - name
+        - subject_id
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        chapter_id:
+          type: integer
+        date_of_quiz:
+          type: string
+          format: date-time
+        time_duration:
+          type: string
+        remarks:
+          type: string
+      required:
+        - name
+        - chapter_id
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+        quiz_id:
+          type: integer
+        chapter_id:
+          type: integer
+        question_statement:
+          type: string
+        option_1:
+          type: string
+        option_2:
+          type: string
+        option_3:
+          type: string
+        option_4:
+          type: string
+        correct_option:
+          type: integer
+          minimum: 1
+          maximum: 4
+      required:
+        - quiz_id
+        - chapter_id
+        - question_statement
+        - option_1
+        - option_2
+        - option_3
+        - option_4
+        - correct_option
+
+    Score:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        quiz_id:
+          type: integer
+        total_score:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - quiz_id
+        - total_score
+
+    LoginRequest:
+      type: object
+      properties:
+        user_name:
+          type: string
+        password:
+          type: string
+      required:
+        - user_name
+        - password
+
+    SignupRequest:
+      type: object
+      properties:
+        user_name:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+      required:
+        - user_name
+        - password
+        - email
+
+    QuizSubmission:
+      type: object
+      properties:
+        answers:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - answers
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user and create a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/signup:
+    post:
+      summary: User registration
+      description: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      description: Destroy the current session
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /users:
+    get:
+      summary: Get all users
+      description: Retrieve a list of all users (admin only)
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new user
+      description: Register a new user (admin only)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Admin access required
+
+  /users/{user_id}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    put:
+      summary: Update user
+      description: Update user information
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Can only update own profile or admin
+        '404':
+          description: User not found
+
+    delete:
+      summary: Delete user
+      description: Delete a user account (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: User not found
+
+  /subjects:
+    get:
+      summary: Get all subjects
+      description: Retrieve a list of all subjects
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
+
+    post:
+      summary: Create a new subject
+      description: Add a new subject (admin only)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subject'
+      responses:
+        '201':
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '403':
+          description: Forbidden - Admin access required
+
+  /subjects/{subject_id}:
+    get:
+      summary: Get subject by ID
+      description: Retrieve a specific subject
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '404':
+          description: Subject not found
+
+    put:
+      summary: Update subject
+      description: Update subject information (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subject'
+      responses:
+        '200':
+          description: Subject updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subject'
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Subject not found
+
+    delete:
+      summary: Delete subject
+      description: Delete a subject and all its chapters/quizzes (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: subject_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Subject deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Subject not found
+
+  /chapters:
+    get:
+      summary: Get all chapters
+      description: Retrieve a list of all chapters
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: subject_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by subject ID
+      responses:
+        '200':
+          description: List of chapters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chapters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chapter'
+
+    post:
+      summary: Create a new chapter
+      description: Add a new chapter under a subject (admin only)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Chapter'
+      responses:
+        '201':
+          description: Chapter created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+        '403':
+          description: Forbidden - Admin access required
+
+  /chapters/{chapter_id}:
+    get:
+      summary: Get chapter by ID
+      description: Retrieve a specific chapter
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chapter details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+        '404':
+          description: Chapter not found
+
+    put:
+      summary: Update chapter
+      description: Update chapter information (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Chapter'
+      responses:
+        '200':
+          description: Chapter updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Chapter not found
+
+    delete:
+      summary: Delete chapter
+      description: Delete a chapter and all its quizzes (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chapter deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Chapter not found
+
+  /quizzes:
+    get:
+      summary: Get all quizzes
+      description: Retrieve a list of all quizzes
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: chapter_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by chapter ID
+      responses:
+        '200':
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Quiz'
+
+    post:
+      summary: Create a new quiz
+      description: Add a new quiz under a chapter (admin only)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quiz'
+      responses:
+        '201':
+          description: Quiz created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '403':
+          description: Forbidden - Admin access required
+
+  /quizzes/{quiz_id}:
+    get:
+      summary: Get quiz by ID
+      description: Retrieve a specific quiz with its questions
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz details with questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quiz:
+                    $ref: '#/components/schemas/Quiz'
+                  questions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Question'
+        '404':
+          description: Quiz not found
+
+    put:
+      summary: Update quiz
+      description: Update quiz information (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quiz'
+      responses:
+        '200':
+          description: Quiz updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Quiz not found
+
+    delete:
+      summary: Delete quiz
+      description: Delete a quiz and all its questions (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quiz deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Quiz not found
+
+  /quizzes/{quiz_id}/submit:
+    post:
+      summary: Submit quiz answers
+      description: Submit answers for a quiz and get results
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: quiz_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizSubmission'
+      responses:
+        '200':
+          description: Quiz results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: integer
+                  total_questions:
+                    type: integer
+                  percentage:
+                    type: number
+                  score_record:
+                    $ref: '#/components/schemas/Score'
+        '400':
+          description: Invalid submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Quiz not found
+
+  /questions:
+    get:
+      summary: Get all questions
+      description: Retrieve questions (optionally filtered by quiz)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: quiz_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by quiz ID
+      responses:
+        '200':
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  questions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Question'
+
+    post:
+      summary: Create a new question
+      description: Add a new question to a quiz (admin only)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Question'
+      responses:
+        '201':
+          description: Question created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '403':
+          description: Forbidden - Admin access required
+
+  /questions/{question_id}:
+    get:
+      summary: Get question by ID
+      description: Retrieve a specific question
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Question details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '404':
+          description: Question not found
+
+    put:
+      summary: Update question
+      description: Update question information (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Question'
+      responses:
+        '200':
+          description: Question updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Question not found
+
+    delete:
+      summary: Delete question
+      description: Delete a question (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: question_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Question deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Forbidden - Admin access required
+        '404':
+          description: Question not found
+
+  /scores:
+    get:
+      summary: Get scores
+      description: Retrieve quiz scores (own scores or all for admin)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by user ID (admin only)
+        - name: quiz_id
+          in: query
+          schema:
+            type: integer
+          description: Filter by quiz ID
+      responses:
+        '200':
+          description: List of scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scores:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Score'
+
+  /search:
+    get:
+      summary: Search content
+      description: Search across users, subjects, chapters, and quizzes
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  subjects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Subject'
+                  chapters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Chapter'
+                  quizzes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Quiz'
+
+  /dashboard:
+    get:
+      summary: Get dashboard data
+      description: Retrieve dashboard statistics (admin only)
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_count:
+                    type: integer
+                  quiz_attempts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  scores:
+                    type: object
+                    additionalProperties:
+                      type: number
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Admin access required
